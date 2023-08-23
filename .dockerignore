@@ -1,0 +1,5 @@
+*
+!docker-openresty-entrypoint.sh
+!somersault-cloud-ui-admin/dist*
+
+!somersault-cloud-ui-app/dist/build/h5/*
