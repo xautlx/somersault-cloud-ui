@@ -1,7 +1,7 @@
 {
   "name": "somersault-cloud-ui-admin",
   "version": "1.8.0-snapshot",
-  "description": "物联网管理系统",
+  "description": "SomersaultCloud全栈开发框架",
   "author": "entdiy.xyz",
   "license": "MIT",
   "scripts": {
@@ -38,7 +38,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://gitee.com/xautlx/somersault-cloud-ui"
+    "url": "https://gitee.com/xautlx/somersault-cloud"
   },
   "dependencies": {
     "@babel/parser": "7.18.4",

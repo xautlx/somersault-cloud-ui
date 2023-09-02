@@ -6,10 +6,10 @@
 
 <script>
 export default {
-  name: 'EntdiyCloudGit',
+  name: 'SomersaultCloudGit',
   data() {
     return {
-      url: 'https://gitee.com/xautlx/somersault-cloud-ui'
+      url: 'https://gitee.com/xautlx/somersault-cloud'
     }
   },
   methods: {

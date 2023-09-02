@@ -35,7 +35,7 @@ export default {
   },
   data() {
     return {
-      title: '物联网管理系统',
+      title: 'SomersaultCloud',
       logo: logoImg
     }
   }

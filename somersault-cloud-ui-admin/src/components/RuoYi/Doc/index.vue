@@ -6,10 +6,10 @@
 
 <script>
 export default {
-  name: 'EntdiyCloudDoc',
+  name: 'SomersaultCloudDoc',
   data() {
     return {
-      url: 'http://124.71.2.242:8888/docs/'
+      url: 'http://doc.entdiy.xyz:8800/'
     }
   },
   methods: {
