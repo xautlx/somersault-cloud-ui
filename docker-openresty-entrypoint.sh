@@ -6,5 +6,5 @@ if [ "${API_URL_PREFIX_TARGET}" != "" ]; then
    -exec sed -i "s#${API_URL_PREFIX_SOURCE}#${API_URL_PREFIX_TARGET}#" {} \;
 fi
 
-echo "Startup openresty..."
 /usr/bin/openresty -g "daemon off;"
+echo "Openresty start success"

@@ -1,4 +1,7 @@
 #!groovy
+
+def _REVISION_TAG
+
 pipeline {
 
     agent any
@@ -48,8 +51,19 @@ pipeline {
         stage("git checkout") {
             steps {
                 git (url: "${env.GIT_PROJECT_ADDR}",
-                     //branch: "${BRANCH_COMMIT}",
+                     branch: "${BRANCH_COMMIT}",
                      credentialsId: "git_secret_for_jenkins")
+
+                // 显示变量列表信息，便于按需取值
+                sh "printenv"
+
+                script {
+                    // 默认采用简化定义形式，便于重复开发调试
+                    // 可添加提交ID，便于代码追溯定义： _REVISION_TAG = "${BRANCH_COMMIT}-${GIT_COMMIT}"
+                    // 可进一步添加时间戳信息便于直观看出代码提交或构建日期时间信息
+                    _REVISION_TAG = "${BRANCH_COMMIT}"
+                    echo _REVISION_TAG
+                }
             }
         }
 
@@ -87,12 +101,25 @@ pipeline {
 
         stage ("docker image") {
             steps{
-               //已知Dockerfile中引用镜像偶尔会出现403异常，通过提前pull镜像规避此问题
-                sh "docker pull openresty/openresty:1.21.4.1-0-bullseye-fat"
+                //已知Dockerfile中引用镜像偶尔会出现403异常，通过提前pull镜像规避此问题
+                //sh "docker pull --platform linux/amd64 openresty/openresty:1.21.4.1-0-bullseye-fat"
+                //sh "docker pull --platform linux/arm64 openresty/openresty:1.21.4.1-0-bullseye-fat"
 
-                sh "docker build . -t somersault-cloud/openresty:1.0.0-snapshot"
-                sh "docker tag somersault-cloud/openresty:1.0.0-snapshot ${params.image_push_registry}/somersault-cloud/openresty:1.0.0-snapshot"
-                sh "docker push ${params.image_push_registry}/somersault-cloud/openresty:1.0.0-snapshot"
+                // https://docs.docker.com/build/building/multi-platform/#qemu
+                sh "docker run --privileged --rm tonistiigi/binfmt --install all"
+                //sh returnStatus: true, script: "docker buildx rm march_container"
+                // https://github.com/moby/buildkit/blob/master/docs/buildkitd.toml.md
+                sh "mkdir -p /etc/buildkit"
+                sh "echo '[registry.\"${image_push_registry}\"]' > /etc/buildkit/buildkitd.toml"
+                sh "echo '  mirrors = [\"${image_push_registry}\"]' >> /etc/buildkit/buildkitd.toml"
+                sh "echo '  http = true' >> /etc/buildkit/buildkitd.toml"
+                sh "echo '  insecure = true' >> /etc/buildkit/buildkitd.toml"
+                // https://docs.docker.com/engine/reference/commandline/buildx_build/
+                // https://github.com/docker/buildx#building-multi-platform-images
+                sh returnStatus: true, script: "docker buildx create --name=march_container --driver=docker-container --use --driver-opt network=host --config /etc/buildkit/buildkitd.toml"
+                sh returnStatus: true, script: "docker buildx inspect --bootstrap"
+
+                sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${params.image_push_registry}/somersault-cloud/openresty:${_REVISION_TAG} . --push"
             }
         }
 
@@ -100,8 +127,7 @@ pipeline {
             steps{
                 build wait: false, job: "somersault-cloud-devops",
                       parameters: [
-                           booleanParam(name: "microservice_deploy", value: false),
-                           booleanParam(name: "frontend_deploy", value: true)
+                           string(name: "deploy_target", value: "frontend")
                       ]
             }
         }
@@ -113,8 +139,7 @@ pipeline {
             steps{
                 build wait: false, job: "somersault-cloud-devops",
                       parameters: [
-                           booleanParam(name: "microservice_deploy", value: false),
-                           booleanParam(name: "frontend_deploy", value: true),
+                           string(name: "deploy_target", value: "frontend"),
                            string(name: 'ansible_hosts', value: 'hosts-multiple')
                       ]
             }
